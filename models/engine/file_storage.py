@@ -68,3 +68,4 @@ class FileStorage:
         if obj is None:
             return
         del obj
+        self.save()
