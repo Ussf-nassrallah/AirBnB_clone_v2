@@ -124,43 +124,39 @@ class HBNBCommand(cmd.Cmd):
         """Overrides the emptyline method of CMD"""
         pass
 
-    def do_create(self, arg):
+    def do_create(self, line):
         """Creates a new instance of a class and saves it to the JSON file"""
-        args = arg.split()
-        if len(args) < 2:
-            print("** class name missing **")
-            return
+        try:
+            if not line:
+                raise SyntaxError()
+            my_list = line.split(" ")  # split cmd line into list
 
-        class_name = args[0]
-        if class_name not in self.classes:
-            print("** class doesn't exist **")
-            return
+            if my_list:  # if list not empty
+                cls_name = my_list[0]  # extract class name
+            else:  # class name missing
+                raise SyntaxError()
 
-        param_dict = {}
-        for param in args[1:]:
-            param_split = param.split('=')
-            if len(param_split) == 2:
-                key, value = param_split
-                # Check if value is a string
-                if value.startswith('"') and value.endswith('"'):
-                    value = value[1:-1]
-                    value = value.replace('_', ' ')
-                # Check if value is a float
-                elif '.' in value:
-                    try:
-                        value = float(value)
-                    except ValueError:
-                        continue
-                # Check if value is an integer
-                elif value.isdigit():
-                    value = int(value)
+            kwargs = {}
+
+            for pair in my_list[1:]:
+                k, v = pair.split("=")
+                if self.is_int(v):
+                    kwargs[k] = int(v)
+                elif self.is_float(v):
+                    kwargs[k] = float(v)
                 else:
-                    continue
-                param_dict[key] = value
+                    v = v.replace('_', ' ')
+                    kwargs[k] = v.strip('"\'')
 
-        new_instance = self.classes[class_name](**param_dict)
-        new_instance.save()
-        print(new_instance.id)
+            obj = self.classes[cls_name](**kwargs)
+            storage.new(obj)  # store new object
+            obj.save()  # save storage to file
+            print(obj.id)  # print id of created object class
+
+        except SyntaxError:
+            print("** class name missing **")
+        except KeyError:
+            print("** class doesn't exist **")
 
     def help_create(self):
         """Help information for the create method"""
@@ -355,6 +351,23 @@ class HBNBCommand(cmd.Cmd):
         """Help information for the update class"""
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
+        
+    @staticmethod
+    def is_int(n):
+        """ checks if integer"""
+        try:
+            int(n)
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def is_float(n):
+        try:
+            float(n)
+            return True
+        except ValueError:
+            return False
 
 
 if __name__ == "__main__":
