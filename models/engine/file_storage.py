@@ -65,7 +65,6 @@ class FileStorage:
         delete obj from __objects if it’s inside
         if obj is equal to None, the method should not do anything
         """
-        if obj is None:
-            return
-        del obj
-        self.save()
+        if obj is not None:
+            del obj
+            self.save()
