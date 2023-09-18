@@ -124,39 +124,33 @@ class HBNBCommand(cmd.Cmd):
         """Overrides the emptyline method of CMD"""
         pass
 
-    def do_create(self, line):
-        """Creates a new instance of a class and saves it to the JSON file"""
-        try:
-            if not line:
-                raise SyntaxError()
-            my_list = line.split(" ")  # split cmd line into list
-
-            if my_list:  # if list not empty
-                cls_name = my_list[0]  # extract class name
-            else:  # class name missing
-                raise SyntaxError()
-
-            kwargs = {}
-
-            for pair in my_list[1:]:
-                k, v = pair.split("=")
-                if self.is_int(v):
-                    kwargs[k] = int(v)
-                elif self.is_float(v):
-                    kwargs[k] = float(v)
-                else:
-                    v = v.replace('_', ' ')
-                    kwargs[k] = v.strip('"\'')
-
-            obj = self.classes[cls_name](**kwargs)
-            storage.new(obj)  # store new object
-            obj.save()  # save storage to file
-            print(obj.id)  # print id of created object class
-
-        except SyntaxError:
+    def do_create(self, arg):
+        """Creates a new instance of BaseModel & saves it in JSON file"""
+        if not arg:
             print("** class name missing **")
-        except KeyError:
+        args = arg.split(" ")
+
+        if args:
+            class_name = args[0]
+        else:
             print("** class doesn't exist **")
+
+        kwargs = {}
+
+        for couple in args[1:]:
+            key, value = couple.split("=")
+            if self.check_int(value):
+                kwargs[key] = int(value)
+            elif self.check_float(value):
+                kwargs[key] = float(value)
+            else:
+                value = value.replace('_', ' ')
+                kwargs[key] = value.strip('"\'')
+
+        new_obj = self.classes[class_name](**kwargs)
+        storage.new(new_obj)
+        new_obj.save()
+        print(new_obj.id)
 
     def help_create(self):
         """Help information for the create method"""
@@ -351,10 +345,10 @@ class HBNBCommand(cmd.Cmd):
         """Help information for the update class"""
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
-        
+
     @staticmethod
-    def is_int(n):
-        """ checks if integer"""
+    def check_int(n):
+        """Check if the value integer"""
         try:
             int(n)
             return True
@@ -362,7 +356,8 @@ class HBNBCommand(cmd.Cmd):
             return False
 
     @staticmethod
-    def is_float(n):
+    def check_float(n):
+        """Check if the value is flaot"""
         try:
             float(n)
             return True
