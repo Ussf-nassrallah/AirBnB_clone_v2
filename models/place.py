@@ -1,11 +1,29 @@
 #!/usr/bin/python3
 """ Place Module for HBNB project """
+from os import getenv
+import models
+from models.amenity import Amenity
+from models.review import Review
 from models.base_model import BaseModel, Base
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import Table, Float, ForeignKey
 from sqlalchemy.orm import relationship
 
 md = Base.metadata
+if getenv("HBNB_TYPE_STORAGE") == "db":
+    place_amenity = Table(
+            'place_amenity',
+            md,
+            Column(
+                'place_id',
+                String(60),
+                ForeignKey('places.id'),
+                primary_key=True, nullable=False),
+            Column(
+                'amenity_id',
+                String(60),
+                ForeignKey('amenities.id'),
+                primary_key=True, nullable=False))
 
 
 class Place(BaseModel, Base):
@@ -23,22 +41,35 @@ class Place(BaseModel, Base):
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
 
-    amenity_ids = relationship(
-        'Amenity',
-        secondary='place_amenity',
-        viewonly=False
-    )
+    if getenv('HBNB_TYPE_STORAGE') == "db":
+        amenity_ids = relationship(
+            'Amenity',
+            secondary=place_amenity,
+            viewonly=False, backref='place_amenities'
+        )
+    else:
+        @property
+        def review(self):
+            reviews_list = []
+            reviews = models.strage.all(Review)
+            for review in reviews.values():
+                if review.place_id == self.id:
+                    reviews_list.append(review)
+            return reviews_list
 
-    place_amenity = Table(
-        'place_amenity',
-        md,
-        Column(
-            'place_id',
-            String(60),
-            ForeignKey('places.id'),
-            primary_key=True, nullable=False),
-        Column(
-            'amenity_id',
-            String(60),
-            ForeignKey('amenities.id'),
-            primary_key=True, nullable=False))
+        @property
+        def amenities(self):
+            """ getter of amenities """
+            amenities_list = []
+            amenities = models.storage.all(Amenity)
+            for key, objct in amenities.items():
+                if key in self.amentiy_ids:
+                    amenities_list.append(objct)
+            return amenities_list
+
+        @amenities.setter
+        def amenities(self, obj=None):
+            """Setter of amenity_ids"""
+            if type(obj).__name__ == 'Amenity':
+                n_amenity = 'Amenity' + '.' + obj.id
+                self.amenity_ids.append(n_amenity)
