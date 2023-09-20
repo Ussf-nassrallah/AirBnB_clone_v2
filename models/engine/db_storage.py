@@ -9,6 +9,7 @@ from models.user import User
 from models.review import Review
 from models.state import State
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy import union_all, select
 
 
 class DBStorage:
@@ -18,32 +19,34 @@ class DBStorage:
 
     def __init__(self):
         """instance methods"""
-        self.__engine = create_engine("mysql+mysqldb://{}:{}@{}:3306/{}"
-                                      .format(getenv('HBNB_MYSQL_USER'),
-                                              getenv('HBNB_MYSQL_PWD'),
-                                              getenv('HBNB_MYSQL_HOST'),
-                                              getenv('HBNB_MYSQL_DB')),
-                                      pool_pre_ping=True)
+        username = getenv('HBNB_MYSQL_USER')
+        password = getenv('HBNB_MYSQL_PWD')
+        host = getenv('HBNB_MYSQL_HOST')
+        dbName = getenv('HBNB_MYSQL_DB')
+        base_url = "mysql+mysqldb://{}:{}@{}:3306/{}"
+        self.__engine = create_engine(
+            base_url.format(username, password, host, dbName),
+            pool_pre_ping=True
+        )
+
         if getenv("HBNB_ENV") == "test":
             Base.metadata.drop_all(self.__engine)
 
     def all(self, cls=None):
-        """"""
-        if cls:
-            cls_list = self.__session.query(cls)
+        """ all : get all data from Database """
+        if cls is None:
+            objs = self.__session.query(State).all()
+            objs.extend(self.__session.query(User).all())
+            objs.extend(self.__session.query(Place).all())
+            objs.extend(self.__session.query(Amenity).all())
+            objs.extend(self.__session.query(City).all())
+            objs.extend(self.__session.query(Review).all())
         else:
-            cls_list = self.__session.query(City)
-            cls_list.extend(self.__session.query(State))
-            cls_list.extend(self.__session.query(Review))
-            cls_list.extend(self.__session.query(Place))
-            cls_list.extend(self.__session.query(User))
-            cls_list.extend(self.__session.query(Amenity))
-
-        dictionary = dict()
-        for clss in cls_list:
-            key = "{}.{}".format(clss.__class__.name, clss.id)
-            dictionary[key] = clss
-        return dictionary
+            if isinstance(cls, str):
+                cls = eval(cls)
+            objects = self.__session.query(cls)
+        return {"{}.{}".format(type(obj).__name__, obj.id): obj
+                for obj in objects}
 
     def new(self, obj):
         """"""
