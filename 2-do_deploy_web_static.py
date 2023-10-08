@@ -22,7 +22,7 @@ def do_deploy(archive_path):
     try:
         # file information (the name of the file that will be distributed)
         f = archive_path.split("/")[-1]  # output: <filename>.tgz
-        f_name = file_name.split(".")[0]  # output: <filename>
+        f_name = f.split(".")[0]  # output: <filename>
         # Upload the archive to the /tmp/ directory of the web server
         put(archive_path, '/tmp/')
         # Uncompress the archive to the folder
@@ -38,6 +38,6 @@ def do_deploy(archive_path):
         run('ln -s {}{}/ /data/web_static/current'.format(path, f_name))
         print("New version deployed!")
         return True
-    except Exception:
-        print("something is wrong!")
+    except Exception as e:
+        print(e)
         return False
