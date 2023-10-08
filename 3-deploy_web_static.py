@@ -74,7 +74,10 @@ def do_deploy(archive_path):
 
 @task
 def deploy():
-    """creates & distributes an archive to the web servers"""
+    """
+    Fabric script that creates and distributes
+      an archive to your web servers
+    """
     archive_file = do_pack()
     if archive_file is None:
         return False
