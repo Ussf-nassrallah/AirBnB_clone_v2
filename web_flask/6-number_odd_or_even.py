@@ -63,7 +63,12 @@ def number_odd_or_even(n):
     display a HTML page only if n is an integer
     """
     if isinstance(n, int):
-        return render_template('6-number_odd_or_even.html', n=n)
+        result = ""
+        if n % 2 == 0:
+            result = "even"
+        else:
+            result = "odd"
+        return render_template('6-number_odd_or_even.html', n=n, result=result)
 
 
 if __name__ == "__main__":
