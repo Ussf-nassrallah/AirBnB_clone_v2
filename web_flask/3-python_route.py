@@ -36,7 +36,7 @@ def pText(text="is cool"):
       of the text variable (replace underscore _ symbols with a space )
       The default value of text is “is cool”
     """
-    return f"python {text.replace('_', ' ')}"
+    return f"Python {text.replace('_', ' ')}"
 
 
 if __name__ == "__main__":
